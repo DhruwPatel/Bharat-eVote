@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin dashboard · Bharat eVote</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+</head>
+<body data-page="admin">
+<div class="admin-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Administrator navigation">
+    <div class="sidebar-brand" id="sideBrand"></div>
+    <div class="sidebar-scroll">
+      <div class="sidebar-label">Workspace</div>
+      <nav class="side-nav" id="sideNav"></nav>
+      <div class="sidebar-label">System</div>
+      <nav class="side-nav" id="sideNavBottom"></nav>
+    </div>
+    <div class="sidebar-foot">
+      <a class="side-link" href="index.html" style="margin-bottom:8px">
+        <i data-lucide="globe" class="icon"></i> View public site
+      </a>
+      <div class="side-user" id="sideUser"></div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sideOverlay"></div>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button class="btn-icon" id="menuBtn" aria-label="Open navigation" style="display:none">
+        <i data-lucide="menu" class="icon"></i>
+      </button>
+      <div>
+        <div class="crumb" style="font-size:14px;font-weight:600;color:var(--navy)">
+          <span class="muted" style="font-weight:500">Admin</span>
+          <i data-lucide="chevron-right" class="icon" style="width:12px;height:12px;vertical-align:-2px"></i>
+          <span id="crumb">Dashboard</span>
+        </div>
+        <div class="small muted" style="margin-top:2px">Bharat eVote control room</div>
+      </div>
+      <div class="admin-search input-icon">
+        <i data-lucide="search" class="icon"></i>
+        <input class="input" id="globalSearch" placeholder="Search elections, candidates, voters" aria-label="Search workspace">
+      </div>
+      <div class="row gap-8" style="margin-left:auto">
+        <span class="chip" id="demoChip" hidden><i data-lucide="flask-conical" class="icon icon-sm"></i> Demo data</span>
+        <button class="btn-icon" id="adminBell" aria-label="Notifications">
+          <i data-lucide="bell" class="icon"></i>
+        </button>
+        <span class="avatar avatar-sm avatar-green" id="topAvatar">AM</span>
+      </div>
+    </header>
+    <div class="admin-content" id="adminView">
+      <div class="card card-pad"><p class="small muted">Loading admin workspace…</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/demo-data.js"></script>
+<script src="assets/js/remote.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/pages/admin.js"></script>
+<script src="assets/js/pages/admin-manage.js"></script>
+<script src="assets/js/pages/admin-more.js"></script>
+</body>
+</html>

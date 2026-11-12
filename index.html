@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bharat eVote — Your Voice. Your Vote. Your Future.</title>
+<meta name="description" content="Bharat eVote is a general-purpose digital voting platform for organizations, communities and associations. Anonymous ballots, transparent results and configurable elections.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+</head>
+<body data-page="home">
+<div id="site-header"></div>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <svg class="hero-waves" viewBox="0 0 1200 520" fill="none" aria-hidden="true">
+      <path d="M-40 380C180 380 300 300 460 250c170-53 320-13 430 34 110 47 200 60 330 12" stroke="#F58220" stroke-width="26" stroke-linecap="round" opacity=".35"/>
+      <path d="M-40 460C180 460 300 380 460 330c170-53 320-13 430 34 110 47 200 60 330 12" stroke="#0D8A4F" stroke-width="26" stroke-linecap="round" opacity=".3"/>
+    </svg>
+    <div class="container hero-inner">
+      <div>
+        <span class="hero-badge"><span class="pill">Prototype</span> General-purpose digital voting for every organisation</span>
+        <h1>Your Voice.<br>Your Vote.<br><span class="grad-text">Your Future.</span></h1>
+        <p class="lede">Bharat eVote gives associations, communities and institutions a modern, transparent way to run elections — with anonymous ballots, verified eligibility and results everyone can trust.</p>
+        <div class="hero-cta">
+          <a class="btn btn-accent btn-lg" href="login.html#register">Register to vote <i data-lucide="arrow-right" class="icon"></i></a>
+          <a class="btn btn-outline btn-lg" href="results.html">View results</a>
+        </div>
+        <div class="hero-meta">
+          <div><b id="heroOpen">—</b><span>Elections open now</span></div>
+          <div><b id="heroVotes">—</b><span>Votes recorded</span></div>
+          <div><b>1</b><span>Ballot per voter</span></div>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <div class="mock">
+          <div class="mock-head">
+            <div>
+              <div class="mock-title" id="mockTitle">Loading live election…</div>
+              <div class="mock-sub" id="mockSub">Verified, anonymised totals</div>
+            </div>
+            <span class="badge badge-active">Live</span>
+          </div>
+          <div class="mock-stats">
+            <div class="mock-stat"><span>Turnout</span><b id="mockTurnout">—</b></div>
+            <div class="mock-stat"><span>Ballots cast</span><b id="mockVotes">—</b></div>
+          </div>
+          <div id="mockRows"></div>
+          <div class="row between" style="padding-top:12px">
+            <span class="small muted"><i data-lucide="lock" class="icon icon-sm" style="vertical-align:-2px"></i> Choice never linked to identity</span>
+            <a class="small strong" style="color:var(--saffron-600)" href="results.html">See results</a>
+          </div>
+        </div>
+        <div class="float-card float-a">
+          <span class="fc-ic"><i data-lucide="check-circle-2" class="icon"></i></span>
+          <div><b>Ballot recorded</b><span>Anonymous · receipt issued</span></div>
+        </div>
+        <div class="float-card float-b">
+          <span class="fc-ic" style="background:#fdf2e7;color:#dd6608"><i data-lucide="shield-check" class="icon"></i></span>
+          <div><b id="floatEligible">2,400</b><span>Eligible voters</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Why Bharat eVote</span>
+        <h2>Election infrastructure that feels effortless</h2>
+        <p>Everything an organisation needs to run a credible vote — from eligibility rules to publication — in one clean, auditable platform.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature">
+          <span class="tile-icon saffron"><i data-lucide="eye-off" class="icon"></i></span>
+          <h3>Anonymous by design</h3>
+          <p>Participation is recorded separately from the ballot itself. Administrators can prove turnout without ever seeing how an individual voted.</p>
+        </article>
+        <article class="feature">
+          <span class="tile-icon green"><i data-lucide="shield-check" class="icon"></i></span>
+          <h3>One voter, one vote</h3>
+          <p>A unique database constraint and an atomic server-side transaction reject duplicate ballots, even when two requests arrive at the same instant.</p>
+        </article>
+        <article class="feature">
+          <span class="tile-icon blue"><i data-lucide="link-2" class="icon"></i></span>
+          <h3>Tamper-evident audit trail</h3>
+          <p>Administrative actions are appended to a hash-chained log, so edits to election settings or voter status can be reviewed later.</p>
+        </article>
+        <article class="feature">
+          <span class="tile-icon violet"><i data-lucide="sliders-horizontal" class="icon"></i></span>
+          <h3>Configurable eligibility</h3>
+          <p>Set who can vote per election, approve or suspend accounts, and control whether verification is required before a ballot is accepted.</p>
+        </article>
+        <article class="feature">
+          <span class="tile-icon blue"><i data-lucide="languages" class="icon"></i></span>
+          <h3>Built for India, ready to localise</h3>
+          <p>English and Hindi ship today, with a dictionary structure that makes adding more Indian languages straightforward.</p>
+        </article>
+        <article class="feature">
+          <span class="tile-icon saffron"><i data-lucide="bar-chart-3" class="icon"></i></span>
+          <h3>Transparent analytics</h3>
+          <p>Turnout, participation trends and candidate shares visualised with Chart.js — published only when results are officially released.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section section-alt" id="how">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">How it works</span>
+        <h2>Three steps from registration to result</h2>
+        <p>A short, guided journey for voters — and a complete control room for election administrators.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Create your account</h3>
+          <p>Register with your name and email. Your profile is created securely and linked to the organisations that make you eligible.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Verify and vote</h3>
+          <p>Once eligibility is confirmed, open ballot shows every candidate and manifesto. Review your choice, then confirm — the submission is final.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Follow the outcome</h3>
+          <p>Track your participation, receive a ballot receipt and read published results with full turnout and candidate-wise breakdowns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE ELECTIONS -->
+  <section class="section" id="elections">
+    <div class="container">
+      <div class="row between wrap gap-16" style="margin-bottom:26px">
+        <div class="section-head" style="margin-bottom:0">
+          <span class="eyebrow">Election schedule</span>
+          <h2 style="margin-bottom:6px">Open and upcoming elections</h2>
+          <p>Schedules, eligibility and status are published for every election on the platform.</p>
+        </div>
+        <a class="btn btn-outline" href="elections.html">Browse all elections <i data-lucide="arrow-up-right" class="icon"></i></a>
+      </div>
+      <div class="election-grid" id="landingElections">
+        <div class="card card-pad"><p class="muted small">Loading elections…</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section class="section section-alt" id="security">
+    <div class="container security-grid">
+      <div>
+        <span class="eyebrow">Security &amp; transparency</span>
+        <h2 style="font-size:clamp(24px,2.7vw,33px);margin:10px 0 14px">Trust is a technical feature, not a promise</h2>
+        <p style="font-size:14.4px;line-height:1.75;color:var(--body)">Ballots are decoupled from identity at the database level. Administrators manage elections and eligibility — never individual choices. Every sensitive operation runs through server-side validation, and public results stay hidden until they are officially published.</p>
+        <div class="demo-banner" style="margin-top:22px;background:#fff;border-style:solid;border-color:var(--line);color:var(--body)">
+          <i data-lucide="info" class="icon"></i>
+          <span><b>Educational prototype.</b> Bharat eVote is not affiliated with the Government of India or the Election Commission. No Aadhaar, blockchain or official certification is claimed.</span>
+        </div>
+        <a class="btn btn-primary mt-24" href="dashboard.html">Explore the voter dashboard <i data-lucide="arrow-right" class="icon"></i></a>
+      </div>
+      <div class="security-list">
+        <div class="security-item">
+          <span class="tile-icon green"><i data-lucide="database" class="icon"></i></span>
+          <div><h4>Separated participation and ballots</h4><p>A participation row proves you voted; a standalone ballot row holds the choice with no voter reference.</p></div>
+        </div>
+        <div class="security-item">
+          <span class="tile-icon saffron"><i data-lucide="lock" class="icon"></i></span>
+          <div><h4>Row Level Security</h4><p>PostgreSQL policies scope every read and write. Administrative functions are protected server-side, never by hidden UI alone.</p></div>
+        </div>
+        <div class="security-item">
+          <span class="tile-icon blue"><i data-lucide="file-check-2" class="icon"></i></span>
+          <div><h4>Append-only audit log</h4><p>Each entry carries the previous entry's hash, making silent history edits detectable during review.</p></div>
+        </div>
+        <div class="security-item">
+          <span class="tile-icon violet"><i data-lucide="clock" class="icon"></i></span>
+          <div><h4>Time-bound elections</h4><p>Ballots are accepted only inside the configured window, verified again on the server for every submission.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">FAQ</span>
+        <h2 data-i18n="landing.faqTitle">Frequently asked questions</h2>
+        <p>What organisations and voters usually ask before their first election.</p>
+      </div>
+      <div class="faq" id="faqList">
+        <div class="faq-item">
+          <button class="faq-q">Who can use Bharat eVote? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>Any organisation, community, association, institution or group that needs a configurable election: housing societies, alumni bodies, student councils, professional guilds, trusts and clubs.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Can an administrator see how I voted? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>No. Participation records and anonymous ballots are stored in separate tables. The admin dashboard shows turnout and aggregate candidate totals only — there is no query that joins a voter to a ballot.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">How is duplicate voting prevented? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>A unique constraint on (election, voter) in the participation table is enforced inside the same database transaction that records the ballot. A second submission is rejected atomically, even under concurrent requests.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">When are results visible? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>Candidate-wise results stay hidden while voting is open. Once voting closes, an administrator publishes the outcome and the results page reveals vote counts, shares and the winner.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Is this an official government platform? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>No. Bharat eVote is an independent educational prototype for general-purpose voting. It is not affiliated with the Government of India or the Election Commission, and it has no official certification or compliance status.</p></div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What technology powers it? <i data-lucide="chevron-down" class="icon"></i></button>
+          <div class="faq-a"><p>HTML5, CSS3 and vanilla JavaScript on the frontend, with Supabase PostgreSQL, Authentication, Storage and Edge Functions on the backend. Charts are rendered with Chart.js and icons with Lucide.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="cta-band">
+        <div>
+          <h2>Ready to run an election people can trust?</h2>
+          <p>Register as a voter, or sign in with the demo administrator account to explore the full control room.</p>
+        </div>
+        <div class="row gap-12 wrap" style="position:relative;z-index:1">
+          <a class="btn btn-accent btn-lg" href="login.html#register">Register to vote</a>
+          <a class="btn btn-lg" style="background:#fff;color:var(--navy)" href="login.html">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/demo-data.js"></script>
+<script src="assets/js/remote.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/pages/home.js"></script>
+</body>
+</html>

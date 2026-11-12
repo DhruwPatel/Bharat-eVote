@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voter dashboard · Bharat eVote</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+</head>
+<body data-page="dashboard">
+<div id="site-header"></div>
+
+<main class="page">
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <span class="eyebrow" id="todayLabel">—</span>
+        <h1 id="welcomeTitle" style="margin-top:8px">Welcome back</h1>
+        <p class="lede" id="welcomeLede">Here is what is happening across your elections today.</p>
+      </div>
+      <div class="page-actions">
+        <a class="btn btn-outline" href="results.html"><i data-lucide="bar-chart-3" class="icon"></i> Results</a>
+        <a class="btn btn-primary" href="elections.html">Browse elections <i data-lucide="arrow-right" class="icon"></i></a>
+      </div>
+    </div>
+
+    <div class="demo-banner" id="demoBanner" hidden>
+      <i data-lucide="flask-conical" class="icon"></i>
+      <span><b>Demo mode.</b> Elections below are clearly-labelled demonstration records stored in this browser. Connect a Supabase project to switch to live data.</span>
+    </div>
+
+    <div id="verifyBanner" class="card card-pad mt-16" hidden
+         style="display:flex;gap:14px;align-items:flex-start;border-color:#f1cfa8;background:#fffbf5">
+      <span class="tile-icon saffron"><i data-lucide="shield-alert" class="icon"></i></span>
+      <div style="flex:1">
+        <h4 style="font-size:13.6px;margin-bottom:3px">Eligibility verification pending</h4>
+        <p class="small muted">Your account is registered but not yet verified. Verification is a configurable step — your election administrator approves eligibility before a ballot is accepted.</p>
+      </div>
+      <button class="btn btn-accent btn-sm" id="verifyBtn">Verify now</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-grid mt-24">
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Available elections</span>
+          <span class="tile-icon saffron"><i data-lucide="vote" class="icon"></i></span>
+        </div>
+        <div class="stat-value" id="statAvailable">—</div>
+        <div class="stat-foot"><span id="statAvailableFoot">Eligible and open now</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Active elections</span>
+          <span class="tile-icon green"><i data-lucide="radio" class="icon"></i></span>
+        </div>
+        <div class="stat-value" id="statActive">—</div>
+        <div class="stat-foot"><span class="stat-delta"><i data-lucide="activity" class="icon icon-sm"></i> Voting open</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Elections participated</span>
+          <span class="tile-icon blue"><i data-lucide="check-check" class="icon"></i></span>
+        </div>
+        <div class="stat-value" id="statParticipated">—</div>
+        <div class="stat-foot"><span class="muted">Your accepted ballots</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <span class="stat-label">Published results</span>
+          <span class="tile-icon violet"><i data-lucide="trophy" class="icon"></i></span>
+        </div>
+        <div class="stat-value" id="statPublished">—</div>
+        <div class="stat-foot"><span class="muted">Official outcomes available</span></div>
+      </div>
+    </div>
+
+    <!-- AVAILABLE + PARTICIPATION -->
+    <div class="grid-dash mt-24">
+      <section class="card">
+        <div class="card-head">
+          <div><h3>Available elections</h3><div class="sub">Elections you can vote in right now</div></div>
+          <a class="link" href="elections.html">View all <i data-lucide="arrow-right" class="icon icon-sm"></i></a>
+        </div>
+        <div class="card-body">
+          <div class="election-grid" id="availableElections"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div><h3>Election participation</h3><div class="sub">Your voting record across the platform</div></div>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap chart-220" style="max-width:260px;margin:0 auto">
+            <canvas id="participationChart" aria-label="Your participation share"></canvas>
+          </div>
+          <div class="chart-legend mt-16" id="participationLegend"></div>
+          <div class="mt-24" id="participationList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ACTIVITY + UPCOMING -->
+    <div class="grid-dash mt-24">
+      <section class="card">
+        <div class="card-head">
+          <div><h3>Recent activity</h3><div class="sub">Registration, verification, ballots and results</div></div>
+          <span class="chip"><i data-lucide="history" class="icon icon-sm"></i> Latest</span>
+        </div>
+        <div class="card-body"><div class="feed" id="activityFeed"></div></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <div><h3>Upcoming elections</h3><div class="sub">Scheduled and not yet open</div></div>
+        </div>
+        <div class="card-body"><div id="upcomingList"></div></div>
+      </section>
+    </div>
+
+    <!-- PROFILE -->
+    <section class="card mt-24" id="profile">
+      <div class="card-head">
+        <div><h3>Your profile</h3><div class="sub">Details used for eligibility checks — never shown alongside your ballot</div></div>
+        <button class="btn btn-outline btn-sm" id="editProfileBtn"><i data-lucide="pencil" class="icon icon-sm"></i> Edit profile</button>
+      </div>
+      <div class="card-body">
+        <div class="row gap-16 wrap" style="align-items:flex-start">
+          <span class="avatar avatar-lg" id="profileAvatar">—</span>
+          <div style="flex:1;min-width:240px">
+            <h4 id="profileName" style="font-size:16px"></h4>
+            <p class="small muted" id="profileEmail"></p>
+            <div class="row gap-8 wrap mt-12" id="profileBadges"></div>
+          </div>
+          <div class="row gap-24 wrap small" id="profileMeta"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/demo-data.js"></script>
+<script src="assets/js/remote.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/pages/dashboard.js"></script>
+</body>
+</html>

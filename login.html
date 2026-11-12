@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Bharat eVote</title>
+<meta name="description" content="Sign in or register on Bharat eVote to vote in open elections and follow published results.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/pages.css">
+</head>
+<body data-page="login">
+<div class="auth-shell">
+  <aside class="auth-visual">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" id="authMark"></span>
+      <span class="brand-word">
+        <span class="brand-name">Bharat <em>eVote</em></span>
+        <span class="brand-tag">Your Voice. Your Vote.</span>
+      </span>
+    </a>
+    <div style="position:relative;z-index:2">
+      <h2>Every vote counts.<br>Every ballot stays private.</h2>
+      <p>Sign in to vote in open elections, track your participation and read results the moment they are published.</p>
+      <div class="auth-points mt-24">
+        <div class="auth-point"><i data-lucide="shield-check" class="icon"></i> One verified voter, one accepted ballot</div>
+        <div class="auth-point"><i data-lucide="eye-off" class="icon"></i> Choices are never linked to your profile</div>
+        <div class="auth-point"><i data-lucide="bar-chart-3" class="icon"></i> Transparent turnout and published results</div>
+      </div>
+    </div>
+    <p style="position:relative;z-index:2;font-size:11.5px;color:#7f8b9d">Educational prototype · Not affiliated with the Government of India or the Election Commission.</p>
+    <svg class="auth-waves" viewBox="0 0 900 300" fill="none" aria-hidden="true">
+      <path d="M-30 210C140 210 230 150 360 110c130-40 240-10 320 26 80 36 160 44 250 8" stroke="#F58220" stroke-width="18" stroke-linecap="round" opacity=".55"/>
+      <path d="M-30 268C140 268 230 208 360 168c130-40 240-10 320 26 80 36 160 44 250 8" stroke="#0D8A4F" stroke-width="18" stroke-linecap="round" opacity=".6"/>
+    </svg>
+  </aside>
+
+  <main class="auth-form-wrap">
+    <div class="auth-card">
+      <a class="brand" href="index.html" style="margin-bottom:26px;display:inline-flex">
+        <span class="brand-mark" id="authMarkMobile"></span>
+        <span class="brand-word">
+          <span class="brand-name">Bharat <em>eVote</em></span>
+          <span class="brand-tag">Your Voice. Your Vote.</span>
+        </span>
+      </a>
+
+      <h1 id="authTitle">Welcome back</h1>
+      <p id="authSub">Sign in to access your voter dashboard.</p>
+
+      <div class="auth-tabs" role="tablist">
+        <button data-tab="signin" class="is-on" role="tab" aria-selected="true">Sign in</button>
+        <button data-tab="register" role="tab" aria-selected="false">Create account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <form class="auth-form" id="signinForm" novalidate>
+        <div class="field">
+          <label class="label" for="siEmail">Email address</label>
+          <div class="input-icon">
+            <i data-lucide="mail" class="icon"></i>
+            <input class="input" id="siEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="row between"><label class="label" for="siPassword">Password</label>
+            <button type="button" class="link-btn" data-tab-link="forgot">Forgot password?</button></div>
+          <div class="input-icon">
+            <i data-lucide="lock" class="icon"></i>
+            <input class="input" id="siPassword" type="password" autocomplete="current-password" placeholder="Your password" required>
+          </div>
+        </div>
+        <p class="field-error" id="siError" hidden></p>
+        <button class="btn btn-primary btn-block btn-lg" type="submit" id="siSubmit">Sign in</button>
+      </form>
+
+      <!-- REGISTER -->
+      <form class="auth-form" id="registerForm" hidden novalidate>
+        <div class="field">
+          <label class="label" for="rgName">Full name</label>
+          <div class="input-icon">
+            <i data-lucide="user" class="icon"></i>
+            <input class="input" id="rgName" type="text" autocomplete="name" placeholder="Your full name" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="rgEmail">Email address</label>
+          <div class="input-icon">
+            <i data-lucide="mail" class="icon"></i>
+            <input class="input" id="rgEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="form-row-two" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label class="label" for="rgPassword">Password</label>
+            <input class="input" id="rgPassword" type="password" autocomplete="new-password" placeholder="Min. 8 characters" required>
+          </div>
+          <div class="field">
+            <label class="label" for="rgConfirm">Confirm password</label>
+            <input class="input" id="rgConfirm" type="password" autocomplete="new-password" placeholder="Repeat password" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="rgPhone">Contact number <span class="muted" style="font-weight:500">(optional)</span></label>
+          <div class="input-icon">
+            <i data-lucide="phone" class="icon"></i>
+            <input class="input" id="rgPhone" type="tel" autocomplete="tel" placeholder="+91 98765 43210">
+          </div>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" id="rgConsent">
+          <span>I understand Bharat eVote is an educational prototype and I will not submit identity documents or Aadhaar numbers.</span>
+        </label>
+        <p class="field-error" id="rgError" hidden></p>
+        <button class="btn btn-accent btn-block btn-lg" type="submit" id="rgSubmit">Create my account</button>
+      </form>
+
+      <!-- FORGOT -->
+      <form class="auth-form" id="forgotForm" hidden novalidate>
+        <div class="field">
+          <label class="label" for="fgEmail">Account email</label>
+          <div class="input-icon">
+            <i data-lucide="mail" class="icon"></i>
+            <input class="input" id="fgEmail" type="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <p class="hint">We will send a password reset link if an account exists for that address.</p>
+        <p class="field-error" id="fgError" hidden></p>
+        <div class="row gap-12">
+          <button class="btn btn-outline" type="button" data-tab-link="signin">Back</button>
+          <button class="btn btn-primary" type="submit" id="fgSubmit" style="flex:1">Send reset link</button>
+        </div>
+      </form>
+
+      <div class="auth-demo" id="demoBox" hidden>
+        <b>Demo accounts</b> — the platform is running on clearly-labelled sample data.<br>
+        Voter: <code>voter@bharatevote.demo</code> · <code>Voter@123</code><br>
+        Administrator: <code>admin@bharatevote.demo</code> · <code>Admin@123</code>
+      </div>
+
+      <div class="auth-note">
+        Protected by Supabase Authentication in production. Passwords are never stored by this application, and no Aadhaar or identity documents are collected.
+      </div>
+
+      <p class="auth-switch">New here? <button type="button" data-tab-link="register">Create a voter account</button></p>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/demo-data.js"></script>
+<script src="assets/js/remote.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/pages/login.js"></script>
+</body>
+</html>
