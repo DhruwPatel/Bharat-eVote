@@ -244,8 +244,46 @@ window.UI = (function () {
         bell.setAttribute("aria-expanded", String(open));
         if (open) {
           try { await window.DB.markNotificationsRead(); } catch (_) {}
+          const dot = bell.querySelector(".bell-dot");
+          if (dot) dot.remove();
+          const badge = notifDrop.querySelector(".dropdown-head .badge");
+          if (badge) badge.remove();
         }
       });
+
+      /* Announce arrivals while the page stays open: badge, toast, chime. */
+      const paintBell = (list) => {
+        const unread = list.filter((n) => !n.read).length;
+        const dot = bell.querySelector(".bell-dot");
+        if (unread && !dot) {
+          const s = document.createElement("span");
+          s.className = "bell-dot";
+          bell.appendChild(s);
+        }
+        if (!unread && dot) dot.remove();
+        const box = notifDrop.querySelector(".notif-list");
+        if (box) {
+          box.innerHTML = list.length
+            ? list.slice(0, 6).map((n) => `<div class="notif-item ${n.read ? "read" : ""}">
+                <span class="dot"></span>
+                <div><p>${esc(n.text)}</p><span>${relTime(n.createdAt)}</span></div></div>`).join("")
+            : `<div class="empty" style="padding:22px"><p class="small">You are all caught up.</p></div>`;
+        }
+      };
+
+      let seenNotes = new Set((notes || []).map((n) => n.id));
+      setInterval(async () => {
+        if (document.hidden) return;
+        let list;
+        try { list = await window.DB.notifications(); } catch (_) { return; }
+        paintBell(list);
+        const fresh = list.filter((n) => !n.read && !seenNotes.has(n.id));
+        seenNotes = new Set(list.map((n) => n.id));
+        if (fresh.length) {
+          toast(fresh[0].text, "info");
+          chime();
+        }
+      }, 20000);
     }
 
     const pBtn = document.getElementById("profileBtn");
@@ -284,6 +322,30 @@ window.UI = (function () {
     icons();
     setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(8px)"; }, 3400);
     setTimeout(() => el.remove(), 3800);
+  }
+
+  /* Soft two-tone chime for a new notification. Browsers only allow audio
+     after a user gesture, so this fails silently when it is blocked. */
+  function chime() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      if (ctx.state === "suspended") ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.14);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.34);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.36);
+      setTimeout(() => ctx.close(), 700);
+    } catch (_) { /* autoplay blocked — indicator still shows */ }
   }
 
   function modal({ title, desc = "", body = "", confirmText = "Confirm", cancelText = "Cancel", danger = false, wide = false, hideCancel = false, onConfirm }) {
@@ -532,7 +594,7 @@ window.UI = (function () {
   return {
     esc, initials, fmtDate, fmtShort, fmtDT, fmtLongDate, relTime, countdown, pct, num,
     electionCard, emptyState,
-    statusBadge, effectiveStatus, mount, icons, toast, modal, confirm, brandHTML, closeDropdowns,
+    statusBadge, effectiveStatus, mount, icons, toast, chime, modal, confirm, brandHTML, closeDropdowns,
     charts: { sparkline, lineChart, barChart, doughnut, centerText, PALETTE, hasChart }
   };
 })();

@@ -57,7 +57,37 @@ window.Admin = (function () {
       document.getElementById("sidebar").classList.add("is-open");
       document.getElementById("sideOverlay").classList.add("is-open");
     });
-    document.getElementById("adminBell").addEventListener("click", async () => {
+    /* The admin header is not built by UI.mount, so the bell needs its own
+       unread badge and a poll: a registration must not wait for a reload. */
+    const adminBell = document.getElementById("adminBell");
+    let adminSeen = new Set();
+
+    function paintBell(notes) {
+      const unread = notes.filter((n) => !n.read).length;
+      const dot = adminBell.querySelector(".bell-dot");
+      if (unread && !dot) {
+        const s = document.createElement("span");
+        s.className = "bell-dot";
+        adminBell.appendChild(s);
+      }
+      if (!unread && dot) dot.remove();
+      adminBell.setAttribute("aria-label", unread ? `Notifications — ${unread} unread` : "Notifications");
+    }
+
+    async function pollBell(announce) {
+      let notes;
+      try { notes = await DB.notifications(); } catch (_) { return; }
+      paintBell(notes);
+      if (announce) {
+        const fresh = notes.filter((n) => !n.read && !adminSeen.has(n.id));
+        if (fresh.length) { UI.toast(fresh[0].text, "info"); UI.chime(); }
+      }
+      adminSeen = new Set(notes.map((n) => n.id));
+    }
+    pollBell(false);
+    setInterval(() => { if (!document.hidden) pollBell(true); }, 20000);
+
+    adminBell.addEventListener("click", async () => {
       const notes = await DB.notifications();
       UI.modal({
         title: "Administrator notifications", wide: true, hideCancel: true, confirmText: "Close",
@@ -67,7 +97,8 @@ window.Admin = (function () {
               <div class="feed-body"><p>${UI.esc(n.text)}</p><span>${UI.relTime(n.createdAt)}</span></div></div>`).join("")}</div>`
           : UI.emptyState("All caught up", "No administrator notifications right now.", "bell-off")
       });
-      DB.markNotificationsRead();
+      await DB.markNotificationsRead();
+      paintBell([]);
     });
     document.getElementById("globalSearch").addEventListener("input", (e) => {
       searchTerm = e.target.value.trim().toLowerCase();
