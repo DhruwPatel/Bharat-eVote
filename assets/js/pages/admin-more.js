@@ -164,6 +164,7 @@
     box.innerHTML = `
       <div class="admin-title-row">
         <div><h1>${esc(window.t("admin.analyticsTitle"))}</h1><p>Participation, distribution and outcome intelligence across the platform.</p></div>
+        <span class="chip"><i data-lucide="sparkles" class="icon icon-sm"></i> Chart.js</span>
       </div>
 
       <div class="grid-2">
