@@ -279,7 +279,7 @@ window.DEMO_DATA = (function () {
       publicResultsOnlyWhenPublished: true,
       anonymousBallots: true,
       orgName: "Bharat eVote",
-      supportEmail: "support@bharatevote.example"
+      supportEmail: "workwithdhruw@gmail.com"
     }
   };
 })();

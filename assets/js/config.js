@@ -13,7 +13,7 @@ window.APP_CONFIG = {
   supabaseAnonKey: "sb_publishable_n21hAj76IOrkpPoiqHKZaw_z6LU0sx2", // publishable key — safe in the browser, RLS enforces access
   siteName: "Bharat eVote",
   tagline: "Your Voice. Your Vote. Your Future.",
-  supportEmail: "support@bharatevote.example",
+  supportEmail: "workwithdhruw@gmail.com",
   // Elections are treated as demo/sample content while this flag is true.
   demoData: true
 };
