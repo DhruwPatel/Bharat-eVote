@@ -296,8 +296,7 @@ button { font: inherit; color: inherit; }
   font-size: 12px; color: var(--muted);
 }
 .footer-note { font-size: 12px; color: var(--muted); line-height: 1.6; max-width: 340px; }
-.footer-credit a { color: var(--body); font-weight: 600; }
-.footer-credit a:hover { color: var(--saffron-600); text-decoration: underline; }
+.footer-credit strong { color: var(--ink); font-weight: 600; }
 
 /* mobile nav row */
 .mobile-nav {
