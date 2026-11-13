@@ -297,6 +297,12 @@ button { font: inherit; color: inherit; }
   font-size: 12px; color: var(--muted);
 }
 .footer-note { font-size: 12px; color: var(--muted); line-height: 1.6; max-width: 340px; }
+.footer-contact { display: inline-block; margin-left: 18px; }
+.footer-contact a {
+  color: var(--ink); text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: #c9ced8;
+}
+.footer-contact a:hover { color: var(--saffron-600); text-decoration-color: currentColor; }
 
 /* mobile nav row */
 .mobile-nav {

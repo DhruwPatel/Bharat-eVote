@@ -199,7 +199,8 @@ window.UI = (function () {
         <div class="footer-bottom">
           <span>© ${new Date().getFullYear()} Bharat eVote. Educational prototype — not for official public elections.</span>
           <span class="footer-credit">
-            Designed &amp; developed by Dhruw Patel · Contact: workwithdhruw@gmail.com
+            Designed &amp; developed by Dhruw Patel
+            <span class="footer-contact">Contact: <a href="mailto:workwithdhruw@gmail.com">workwithdhruw@gmail.com</a></span>
           </span>
           <span>Your Voice. Your Vote. Your Future.</span>
         </div>
