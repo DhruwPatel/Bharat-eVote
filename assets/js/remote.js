@@ -151,6 +151,13 @@ window.REMOTE_DB = (function () {
       if (profile.status === "suspended") return { ok: false, reason: "suspended" };
       if (!profile.verified) return { ok: false, reason: "unverified" };
       if (election.status !== "active") return { ok: false, reason: "not-open" };
+      // Status alone is not enough: the database also enforces the voting window,
+      // so mirror that check here or the ballot looks open while every submit fails.
+      const now = Date.now();
+      const startsAt = new Date(election.startsAt).getTime();
+      const endsAt = new Date(election.endsAt).getTime();
+      if (Number.isFinite(startsAt) && now < startsAt) return { ok: false, reason: "scheduled" };
+      if (Number.isFinite(endsAt) && now > endsAt) return { ok: false, reason: "window-closed" };
       if (await api.hasVoted(election.id)) return { ok: false, reason: "voted" };
       const { data } = await client().from("voter_eligibility")
         .select("approved").eq("election_id", election.id).maybeSingle();
@@ -162,9 +169,26 @@ window.REMOTE_DB = (function () {
       const { data, error } = await client().functions.invoke("cast-vote", {
         body: { election_id: electionId, candidate_id: candidateId }
       });
-      if (error) throw new Error(error.message || "Could not submit your ballot.");
-      if (data && data.error) throw new Error(data.error);
-      return { receipt: data.receipt, electionId };
+
+      if (!error && !(data && data.error)) return { receipt: data.receipt, electionId };
+
+      // The Edge Function is a convenience wrapper: JWT check + rate limit around
+      // cast_ballot(). The database function is the real enforcement point (row
+      // lock, window, eligibility, unique constraint), and it is granted to
+      // authenticated users, so call it directly when the function is missing.
+      if (!functionMissing(error)) {
+        throw new Error((data && data.error) || (error && error.message) || "Could not submit your ballot.");
+      }
+
+      console.warn("[Bharat eVote] cast-vote is not deployed; submitting through cast_ballot() directly.");
+      const limited = await client().rpc("assert_rate_limit", { p_action: "vote", p_max: 5 });
+      if (limited.error) throw new Error(limited.error.message);
+
+      const { data: receipt, error: castError } = await client().rpc("cast_ballot", {
+        p_election_id: electionId, p_candidate_id: candidateId
+      });
+      if (castError) throw new Error(castError.message || "Could not submit your ballot.");
+      return { receipt, electionId };
     },
 
     async results(id) {
@@ -270,11 +294,168 @@ window.REMOTE_DB = (function () {
     }
   };
 
+  const STATUSES = ["draft", "upcoming", "active", "closed", "published"];
+
+  // Actions the browser can perform safely on its own: RLS already restricts
+  // every one of these tables to administrators, so this does not widen access.
+  // The Edge Function adds server-side validation and audit entries; keep it
+  // deployed in production. This path exists so the app also works before the
+  // function is deployed.
+  const VOTER_STATUSES = ["pending", "verified", "rejected", "suspended"];
+
+  const FALLBACK_ACTIONS = new Set([
+    "election.create", "election.update", "election.delete", "election.status",
+    "candidate.create", "candidate.update", "candidate.delete",
+    "voter.status", "settings.update"
+  ]);
+
+  async function categoryId(name) {
+    if (!name) return null;
+    const clean = String(name).trim();
+    if (!clean) return null;
+    const { data } = await client().from("election_categories").select("id").eq("name", clean).maybeSingle();
+    if (data) return data.id;
+    const { data: created } = await client().from("election_categories").insert({ name: clean }).select("id").single();
+    return created ? created.id : null;
+  }
+
+  async function directAdmin(action, p) {
+    const c = client();
+    const fail = (msg) => { throw new Error(msg); };
+
+    if (action === "election.create" || action === "election.update") {
+      const title = String(p.title ?? "").trim();
+      const description = String(p.description ?? "").trim();
+      if (title.length < 4 || description.length < 10) fail("Title and description are required");
+      if (!p.startsAt || !p.endsAt || new Date(String(p.endsAt)) <= new Date(String(p.startsAt))) {
+        fail("Closing date must be after the opening date");
+      }
+      const row = {
+        title, description,
+        category_id: await categoryId(p.category),
+        eligible_count: Number(p.eligible) || 0,
+        starts_at: p.startsAt, ends_at: p.endsAt
+      };
+      if (action === "election.create") {
+        const { data, error } = await c.from("elections").insert(row).select("id").single();
+        if (error) fail(error.message);
+        return { ok: true, id: data.id };
+      }
+      const { error } = await c.from("elections").update(row).eq("id", String(p.id ?? ""));
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    if (action === "election.delete") {
+      const { error } = await c.from("elections").delete()
+        .eq("id", String(p.id ?? "")).eq("status", "draft");
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    if (action === "election.status") {
+      const status = String(p.status ?? "");
+      if (!STATUSES.includes(status)) fail("Unknown election status");
+      const id = String(p.id ?? "");
+      if (["active", "upcoming"].includes(status)) {
+        const { count } = await c.from("candidates")
+          .select("id", { count: "exact", head: true }).eq("election_id", id);
+        if ((count ?? 0) < 2) fail("Add at least two candidates before opening the election");
+      }
+      const patch = { status };
+      if (status === "published") patch.published_at = new Date().toISOString();
+      const { error } = await c.from("elections").update(patch).eq("id", id);
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    if (action === "candidate.create" || action === "candidate.update") {
+      const name = String(p.name ?? "").trim();
+      const manifesto = String(p.manifesto ?? "").trim();
+      if (name.length < 2 || manifesto.length < 10) {
+        fail("Name and manifesto are required (manifesto needs 10+ characters)");
+      }
+      if (!p.electionId) fail("Choose an election");
+      const row = {
+        election_id: String(p.electionId), name,
+        affiliation: String(p.party ?? "Independent").trim() || "Independent",
+        manifesto, photo_url: p.photoUrl ? String(p.photoUrl) : null
+      };
+      const { error } = action === "candidate.create"
+        ? await c.from("candidates").insert(row)
+        : await c.from("candidates").update(row).eq("id", String(p.id ?? ""));
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    if (action === "candidate.delete") {
+      const { error } = await c.from("candidates").delete().eq("id", String(p.id ?? ""));
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    if (action === "voter.status") {
+      const status = String(p.status ?? "");
+      if (!VOTER_STATUSES.includes(status)) fail("Unknown voter status");
+      const userId = String(p.user_id ?? "");
+      if (!userId) fail("Voter not found");
+      const { data: voter, error: readError } = await c.from("profiles")
+        .select("id, full_name").eq("id", userId).maybeSingle();
+      if (readError) fail(readError.message);
+      if (!voter) fail("Voter not found");
+      const { error } = await c.from("profiles")
+        .update({ status, verified: status === "verified" }).eq("id", userId);
+      if (error) fail(error.message);
+      // Notifications are service-role only; skip quietly when RLS refuses.
+      await c.from("notifications").insert({
+        user_id: userId,
+        body: status === "verified" ? "Your eligibility has been approved. You can now vote in open elections."
+          : status === "suspended" ? "Your account has been suspended pending review."
+          : `Your eligibility status changed to ${status}.`
+      });
+      return { ok: true };
+    }
+
+    if (action === "settings.update") {
+      const { error } = await c.from("platform_settings").upsert({
+        id: true,
+        org_name: p.orgName ?? "Bharat eVote",
+        support_email: p.supportEmail ?? null,
+        require_verification: !!p.requireVerification,
+        allow_self_registration: !!p.allowSelfRegistration,
+        public_results_only_when_published: !!p.publicResultsOnlyWhenPublished,
+        updated_at: new Date().toISOString()
+      });
+      if (error) fail(error.message);
+      return { ok: true };
+    }
+
+    fail("This action needs the admin-action Edge Function. Deploy it from the Supabase dashboard.");
+  }
+
+  function functionMissing(error) {
+    if (!error) return false;
+    if (error.context && error.context.status === 404) return true;
+    return /not found|failed to send|edge function/i.test(error.message || "");
+  }
+
   async function admin(action, payload) {
-    const { data, error } = await client().functions.invoke("admin-action", { body: { action, payload } });
+    const body = payload || {};
+    const { data, error } = await client().functions.invoke("admin-action", { body: { action, payload: body } });
+
+    if (!error && !(data && data.error)) return data;
+
+    if (functionMissing(error) && FALLBACK_ACTIONS.has(action)) {
+      console.warn("[Bharat eVote] admin-action is not deployed; applying " + action +
+        " directly. Row Level Security still restricts this to administrators.");
+      return directAdmin(action, body);
+    }
+
+    if (functionMissing(error)) {
+      throw new Error("The admin-action function is not deployed yet, so this action is unavailable.");
+    }
     if (error) throw new Error(error.message || "Administrator action failed.");
-    if (data && data.error) throw new Error(data.error);
-    return data;
+    throw new Error((data && data.error) || "Administrator action failed.");
   }
 
   return api;

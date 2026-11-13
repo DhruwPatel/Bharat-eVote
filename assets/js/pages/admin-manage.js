@@ -114,7 +114,7 @@ window.AdminViews = window.AdminViews || {};
           <tbody>${list.map((e) => `<tr>
             <td><div class="name" style="font-weight:600;color:var(--ink)">${esc(e.title)}</div>
               <div class="small muted">${esc(e.category)} · ${UI.num(e.eligible)} eligible</div></td>
-            <td>${UI.statusBadge(e.status)}</td>
+            <td>${UI.statusBadge(UI.effectiveStatus(e))}</td>
             <td class="small muted">${UI.fmtShort(e.startsAt)} – ${UI.fmtShort(e.endsAt)}<br>${new Date(e.startsAt).getFullYear()}</td>
             <td class="num">${e.candidateCount}</td>
             <td class="num">${UI.num(e.votesCast)}</td>
@@ -223,8 +223,8 @@ window.AdminViews = window.AdminViews || {};
     box.innerHTML = `
       <div class="admin-title-row">
         <div><h1>${esc(window.t("admin.candidatesTitle"))}</h1><p>Photographs, affiliations and manifestos for every candidate.</p></div>
-        <div class="row gap-10 wrap">
-          <select class="select" id="candElection" style="min-width:240px" aria-label="Filter by election">
+        <div class="row gap-16 wrap" style="gap:20px">
+          <select class="select" id="candElection" style="min-width:200px;max-width:320px;flex:1 1 auto" aria-label="Filter by election">
             ${elections.map((e) => `<option value="${e.id}" ${e.id === filter ? "selected" : ""}>${esc(e.title)}</option>`).join("")}
           </select>
           <button class="btn btn-primary btn-sm" id="addCand"><i data-lucide="user-plus" class="icon icon-sm"></i> Add candidate</button>

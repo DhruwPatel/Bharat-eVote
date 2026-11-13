@@ -57,6 +57,20 @@ window.UI = (function () {
     return `<span class="badge ${s.cls}">${esc(window.t(s.label))}</span>`;
   }
 
+  /* An election is only really open inside its voting window; status alone can
+     say "active" while the clock is still before starts_at. */
+  function effectiveStatus(e) {
+    if (!e) return "draft";
+    if (e.status === "active") {
+      const now = Date.now();
+      const start = e.startsAt ? new Date(e.startsAt).getTime() : NaN;
+      const end = e.endsAt ? new Date(e.endsAt).getTime() : NaN;
+      if (Number.isFinite(start) && now < start) return "upcoming";
+      if (Number.isFinite(end) && now > end) return "closed";
+    }
+    return e.status;
+  }
+
   /* ---------------- chrome ---------------- */
   function brandHTML() {
     return `<a class="brand" href="index.html" aria-label="Bharat eVote home">
@@ -488,7 +502,7 @@ window.UI = (function () {
     return `<article class="election-card" data-election="${e.id}">
       <div class="ec-top">
         <span class="ec-cat">${esc(e.category)}</span>
-        ${statusBadge(e.status)}
+        ${statusBadge(effectiveStatus(e))}
       </div>
       <h4>${esc(e.title)}</h4>
       <p class="ec-desc clamp-2">${esc(e.description)}</p>
@@ -515,7 +529,7 @@ window.UI = (function () {
   return {
     esc, initials, fmtDate, fmtShort, fmtDT, fmtLongDate, relTime, countdown, pct, num,
     electionCard, emptyState,
-    statusBadge, mount, icons, toast, modal, confirm, brandHTML, closeDropdowns,
+    statusBadge, effectiveStatus, mount, icons, toast, modal, confirm, brandHTML, closeDropdowns,
     charts: { sparkline, lineChart, barChart, doughnut, centerText, PALETTE, hasChart }
   };
 })();

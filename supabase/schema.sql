@@ -1,6 +1,12 @@
 -- =====================================================================
 -- Bharat eVote — Supabase / PostgreSQL schema
 -- Run in Supabase → SQL Editor (or: supabase db push)
+--
+-- This file is the single source of truth for the database: tables, RLS
+-- policies, triggers, storage buckets and every function body. It is
+-- idempotent, so re-running it is the supported way to apply function
+-- changes to an existing project. Do not keep copies of these functions
+-- anywhere else — edit them here and re-run.
 -- ---------------------------------------------------------------------
 -- Security model
 --   • profiles hold identity + role; ballots never reference a voter.
@@ -13,7 +19,9 @@
 --     service role, after verifying the caller's administrator profile.
 -- =====================================================================
 
-create extension if not exists pgcrypto;
+-- No extension is required: hashing uses md5() and ids use gen_random_uuid(),
+-- both of which ship with PostgreSQL 13+. This keeps the schema runnable in
+-- projects where pgcrypto cannot be installed into the function search_path.
 
 -- ---------------------------------------------------------------- enums
 do $$ begin
@@ -257,16 +265,12 @@ end;
 $$;
 
 -- ---------------------------------------------------------------- audit chain
--- pgcrypto provides digest(); Supabase installs extensions into the "extensions"
--- schema, which is NOT on the default search_path of a security-definer function.
-create schema if not exists extensions;
-create extension if not exists pgcrypto with schema extensions;
-
+-- Hashing uses md5() from pg_catalog, so no extension has to be installed.
 create or replace function public.append_audit(
   p_action text, p_target text default '', p_detail text default '', p_actor_label text default null
 )
 returns public.audit_logs
-language plpgsql security definer set search_path = public, extensions
+language plpgsql security definer set search_path = public
 as $$
 declare
   v_prev text;
@@ -280,7 +284,7 @@ begin
   insert into public.audit_logs (actor_id, actor_label, action, target, detail, prev_hash, hash)
   values (
     auth.uid(), v_actor, p_action, p_target, p_detail, v_prev,
-    encode(digest(v_prev || '|' || p_action || '|' || p_target || '|' || p_detail || '|' || clock_timestamp()::text, 'sha256'), 'hex')
+    md5(v_prev || '|' || p_action || '|' || p_target || '|' || p_detail || '|' || clock_timestamp()::text)
   )
   returning * into v_row;
   return v_row;
@@ -332,8 +336,8 @@ begin
     raise exception 'Invalid candidate for this election';
   end if;
 
-  v_receipt := 'BVT-' || upper(substr(encode(gen_random_bytes(3), 'hex'), 1, 4))
-                    || '-' || upper(substr(encode(gen_random_bytes(3), 'hex'), 1, 4));
+  v_receipt := 'BVT-' || upper(substr(md5(random()::text || clock_timestamp()::text || v_uid::text), 1, 4))
+                    || '-' || upper(substr(md5(v_uid::text || clock_timestamp()::text || random()::text), 1, 4));
 
   -- Participation (identity) and ballot (choice) are written separately,
   -- inside one transaction. The unique constraint rejects duplicates.
@@ -349,8 +353,14 @@ begin
   insert into public.notifications (user_id, body)
   values (v_uid, 'Your ballot for ' || v_election.title || ' was recorded. Receipt ' || v_receipt || '.');
 
-  perform public.append_audit('ballot.cast', v_election.title,
-    'Anonymous ballot recorded; no voter identifier attached', 'Voting booth');
+  begin
+    perform public.append_audit('ballot.cast', v_election.title,
+      'Anonymous ballot recorded; no voter identifier attached', 'Voting booth');
+  exception when others then
+    -- A broken audit sink must never disenfranchise a voter: the ballot and
+    -- receipt are already written inside this transaction.
+    null;
+  end;
 
   return v_receipt;
 exception

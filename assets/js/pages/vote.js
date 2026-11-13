@@ -51,12 +51,27 @@
   const already = await DB.hasVoted(election.id);
   const receipt = (await DB.myParticipation()).find((p) => p.electionId === election.id);
   const canVote = await DB.canVote(election);
-  const open = election.status === "active";
+
+  /* "Open" means status is active AND the current time is inside the voting
+     window — the database enforces both, so the UI must show the same answer. */
+  const nowMs = Date.now();
+  const startMs = new Date(election.startsAt).getTime();
+  const endMs = new Date(election.endsAt).getTime();
+  const beforeStart = Number.isFinite(startMs) && nowMs < startMs;
+  const afterEnd = Number.isFinite(endMs) && nowMs > endMs;
+  const open = election.status === "active" && !beforeStart && !afterEnd;
+  const badgeState = open ? "active"
+    : election.status === "published" ? "published"
+    : (election.status === "upcoming" || (election.status === "active" && beforeStart)) ? "upcoming"
+    : "closed";
+  const badgeLabel = open ? "Voting open"
+    : election.status === "published" ? "Results published"
+    : (election.status === "upcoming" || (election.status === "active" && beforeStart))
+      ? "Opens " + UI.fmtDT(election.startsAt)
+    : "Voting closed";
 
   const statusLine = `<div class="row gap-12 wrap">
-      <span class="badge badge-${election.status === "active" ? "active" : election.status === "upcoming" ? "upcoming" : election.status === "published" ? "published" : "closed"}">${UI.esc(
-        election.status === "active" ? "Voting open" : election.status === "upcoming" ? "Opens " + UI.fmtDate(election.startsAt) : election.status === "published" ? "Results published" : "Voting closed"
-      )}</span>
+      <span class="badge badge-${badgeState}">${UI.esc(badgeLabel)}</span>
       <span class="small muted">${election.category}</span>
     </div>`;
 
@@ -96,7 +111,7 @@
         <i data-lucide="${open ? "info" : "lock"}" class="icon"></i>
         <div>${open
           ? `${UI.esc(window.t("vote.instructions"))}`
-          : `<b>This election is not accepting ballots.</b> ${election.status === "upcoming"
+          : `<b>This election is not accepting ballots.</b> ${(election.status === "upcoming" || (election.status === "active" && beforeStart))
               ? `Voting opens ${UI.fmtDT(election.startsAt)}. You can review candidates now.`
               : election.status === "published"
                 ? "Voting has closed and results are published."
@@ -108,6 +123,21 @@
         </div>` : ""}
       ${!canVote.ok && canVote.reason === "suspended" ? `<div class="demo-banner" style="margin-top:14px">
           <i data-lucide="ban" class="icon"></i><span><b>Account suspended.</b> Contact the election administrator to restore voting access.</span>
+        </div>` : ""}
+      ${!canVote.ok && canVote.reason === "admin" ? `<div class="demo-banner" style="margin-top:14px">
+          <i data-lucide="user-cog" class="icon"></i><span><b>You are signed in as an administrator.</b> Admin accounts cannot cast ballots, so the options below are read-only. Sign in with a voter account to test voting.</span>
+        </div>` : ""}
+      ${!canVote.ok && canVote.reason === "not-open" && election.status === "upcoming" ? `<div class="demo-banner" style="margin-top:14px">
+          <i data-lucide="calendar-clock" class="icon"></i><span><b>Voting has not been opened yet.</b> Dates alone do not open a ballot — an administrator must set this election to <b>Active</b> from Manage elections.</span>
+        </div>` : ""}
+      ${!canVote.ok && canVote.reason === "voted" ? `<div class="demo-banner" style="margin-top:14px">
+          <i data-lucide="check-circle-2" class="icon"></i><span><b>A ballot is already recorded for this election.</b> Only one vote is accepted per voter.</span>
+        </div>` : ""}
+      ${!canVote.ok && canVote.reason === "scheduled" ? `<div class="demo-banner" style="margin-top:14px">
+          <i data-lucide="clock" class="icon"></i><span><b>Voting has not started yet.</b> Ballots open at <b>${UI.esc(UI.fmtDT(election.startsAt))}</b> and close at ${UI.esc(UI.fmtDT(election.endsAt))}. The server rejects ballots outside that window.</span>
+        </div>` : ""}
+      ${!canVote.ok && canVote.reason === "window-closed" ? `<div class="demo-banner" style="margin-top:14px">
+          <i data-lucide="lock" class="icon"></i><span><b>The voting window has ended.</b> It closed at ${UI.esc(UI.fmtDT(election.endsAt))}. Results appear once the administrator publishes them.</span>
         </div>` : ""}
     </div>
 

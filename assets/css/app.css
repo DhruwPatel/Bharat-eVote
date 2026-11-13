@@ -259,6 +259,11 @@ table.data .num { text-align: right; font-variant-numeric: tabular-nums; }
 .admin-content { padding: 26px 28px 60px; max-width: 1420px; }
 .sidebar-overlay { display: none; }
 .admin-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.admin-title-row > div:first-child { min-width: 0; }
+/* When the controls wrap onto their own line, keep them pinned to the right
+   instead of sitting at the left edge of the content column. */
+.admin-title-row > div:last-child { margin-left: auto; justify-content: flex-end; }
+.admin-title-row .select { min-width: 0; max-width: 100%; }
 .admin-title-row h1 { font-size: 23px; }
 .admin-title-row p { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .breadcrumb-bar { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
