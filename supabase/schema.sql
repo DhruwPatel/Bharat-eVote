@@ -410,6 +410,68 @@ create trigger elections_publish
   before update on public.elections
   for each row execute function public.on_results_published();
 
+-- ------------------------------------- registration + approval notifications
+-- Clients cannot insert into public.notifications (only read/mark-read their
+-- own rows), so both sides of the approval conversation are written here by
+-- security-definer triggers: every administrator hears about a new voter, and
+-- the voter hears the decision.
+create or replace function public.on_profile_registered()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.role <> 'voter' then
+    return new;
+  end if;
+  begin
+    insert into public.notifications (user_id, body)
+    select a.id, 'New voter awaiting review: ' || new.full_name || ' (' || new.email || ').'
+      from public.profiles a
+     where a.role = 'admin' and a.status <> 'suspended';
+  exception when others then
+    -- A notification must never block a registration.
+    null;
+  end;
+  return new;
+end;
+$$;
+
+create or replace function public.on_profile_status_change()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_body text;
+begin
+  if new.status is not distinct from old.status
+     and new.verified is not distinct from old.verified then
+    return new;
+  end if;
+
+  v_body := case new.status
+    when 'verified'  then 'Your eligibility was approved. You can vote in open elections now.'
+    when 'rejected'  then 'Your registration was rejected. Contact the administrator if you think this is a mistake.'
+    when 'suspended' then 'Your account was suspended pending review.'
+    when 'pending'   then 'Your account is pending review by an administrator.'
+    else 'Your eligibility status is now ' || new.status || '.'
+  end;
+
+  begin
+    insert into public.notifications (user_id, body) values (new.id, v_body);
+    insert into public.activity_log (user_id, type, body) values (new.id, 'verification', v_body);
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_registered on public.profiles;
+create trigger profiles_registered
+  after insert on public.profiles
+  for each row execute function public.on_profile_registered();
+
+drop trigger if exists profiles_status_change on public.profiles;
+create trigger profiles_status_change
+  after update of status, verified on public.profiles
+  for each row execute function public.on_profile_status_change();
+
 -- ---------------------------------------------------------------- results RPC
 create or replace function public.get_election_results(p_election_id uuid)
 returns jsonb

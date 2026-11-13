@@ -406,13 +406,9 @@ window.REMOTE_DB = (function () {
       const { error } = await c.from("profiles")
         .update({ status, verified: status === "verified" }).eq("id", userId);
       if (error) fail(error.message);
-      // Notifications are service-role only; skip quietly when RLS refuses.
-      await c.from("notifications").insert({
-        user_id: userId,
-        body: status === "verified" ? "Your eligibility has been approved. You can now vote in open elections."
-          : status === "suspended" ? "Your account has been suspended pending review."
-          : `Your eligibility status changed to ${status}.`
-      });
+      // The profiles_status_change trigger in schema.sql writes the voter's
+      // notification and activity entry — clients cannot insert into
+      // public.notifications, so the database owns that side of the flow.
       return { ok: true };
     }
 
