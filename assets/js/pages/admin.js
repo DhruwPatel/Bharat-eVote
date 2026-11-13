@@ -172,6 +172,36 @@ window.Admin = (function () {
     const upcoming = els.filter((e) => e.status === "upcoming");
     const audits = await DB.auditLogs();
 
+    /* The declared winner belongs on the overview: the tally itself lives on
+       the results page, but an administrator opening the dashboard should not
+       have to dig for the outcome. */
+    let winnerCard = "";
+    const publishedEl = els.find((e) => e.status === "published");
+    if (publishedEl) {
+      try {
+        const r = await DB.results(publishedEl.id);
+        if (r.published && r.winner) {
+          winnerCard = `<div class="card card-pad mt-24">
+            <div class="row between wrap gap-16">
+              <div class="row gap-16" style="align-items:center">
+                <span class="avatar">${UI.initials(r.winner.name)}</span>
+                <div>
+                  <span class="eyebrow">Declared winner · ${UI.esc(publishedEl.title)}</span>
+                  <h3 style="margin:2px 0 0">${UI.esc(r.winner.name)}</h3>
+                  <p class="small muted" style="margin:4px 0 0">${UI.esc(r.winner.party)} · ${UI.num(r.winner.votes)} votes · ${r.winner.share}% vote share</p>
+                </div>
+              </div>
+              <div class="row gap-16 wrap" style="align-items:center">
+                <div style="text-align:right"><div class="strong">${UI.num(r.totalVotes)}</div><div class="small muted">ballots</div></div>
+                <div style="text-align:right"><div class="strong">${r.turnout}%</div><div class="small muted">turnout</div></div>
+                <a class="btn btn-outline btn-sm" href="results.html?id=${publishedEl.id}">Full results <i data-lucide="arrow-right" class="icon icon-sm"></i></a>
+              </div>
+            </div>
+          </div>`;
+        }
+      } catch (_) { /* results unreadable (function not updated yet) — skip */ }
+    }
+
     box.innerHTML = `
       <div class="admin-title-row">
         <div>
@@ -201,6 +231,7 @@ window.Admin = (function () {
         ${statCard("admin.votesCast", UI.num(s.votesCast), "check-check", "green", "Across all elections", "Accepted anonymous ballots", true)}
         ${statCard("admin.completed", s.completedElections, "flag", "blue", `${els.filter((e) => e.status === "published").length} published`, "Closed or published elections")}
       </div>
+      ${winnerCard}
 
       <div class="grid-dash mt-24">
         <section class="card">
