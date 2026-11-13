@@ -236,9 +236,16 @@ window.REMOTE_DB = (function () {
     async voters() {
       const { data, error } = await client().from("profiles").select("*").order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
+      // Participation receipts record that an account voted, never what it
+      // chose, so counting them is safe for administrators and is the only
+      // honest source for this column. RLS exposes them to admins only.
+      const { data: parts } = await client().from("voter_participation").select("user_id");
+      const voted = {};
+      (parts || []).forEach((p) => { voted[p.user_id] = (voted[p.user_id] || 0) + 1; });
       return (data || []).map((p) => ({
         id: p.id, name: p.full_name, email: p.email, phone: p.phone, role: p.role,
-        verified: p.verified, status: p.status, registeredAt: p.created_at, electionsVoted: 0
+        verified: p.verified, status: p.status, registeredAt: p.created_at,
+        electionsVoted: voted[p.id] || 0
       }));
     },
 
