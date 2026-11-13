@@ -512,7 +512,7 @@ begin
   if v_visible then
     select jsonb_agg(row_to_json(t) order by t.votes desc, t.display_order) into v_rows
     from (
-      select candidate_id, name, affiliation, color, votes,
+      select candidate_id, name, affiliation, color, votes, display_order,
              case when v_total > 0 then round((votes::numeric / v_total) * 100, 1) else 0 end as share
         from (
           select c.id as candidate_id, c.name, c.affiliation, c.color, c.display_order,
