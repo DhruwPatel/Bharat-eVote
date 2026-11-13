@@ -104,6 +104,17 @@ window.REMOTE_DB = (function () {
     },
 
     async elections() {
+      // An election stays "active" in the table after its window passes; the
+      // ballot function rejects late votes, but the status has to catch up or
+      // results review stays locked. Administrators close expired ones here.
+      if (profile && profile.role === "admin") {
+        try {
+          await client().from("elections")
+            .update({ status: "closed" })
+            .eq("status", "active")
+            .lt("ends_at", new Date().toISOString());
+        } catch (_) { /* non-fatal: the RPC also treats an expired window as closed */ }
+      }
       let q = client().from("elections")
         .select("*, election_categories(name), candidates(count)")
         .order("starts_at", { ascending: false });

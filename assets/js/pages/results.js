@@ -42,7 +42,7 @@
       return;
     }
     const e = r.election;
-    const statusBadge = UI.statusBadge(e.status);
+    const statusBadge = UI.statusBadge(UI.effectiveStatus(e));
     const published = r.published;
 
     body.innerHTML = `

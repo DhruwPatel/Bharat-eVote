@@ -492,7 +492,12 @@ begin
     raise exception 'Election not found';
   end if;
 
-  v_visible := v_e.status = 'published' or (v_admin and v_e.status = 'closed');
+  -- An election whose window has passed is closed for review purposes even if
+  -- nothing flipped the status column yet; ballots are already rejected by
+  -- cast_ballot's window check.
+  v_visible := v_e.status = 'published'
+               or (v_admin and (v_e.status = 'closed'
+                                or (v_e.status = 'active' and now() > v_e.ends_at)));
 
   with tallies as (
     select c.id as candidate_id, c.name, c.affiliation, c.color, c.display_order,
@@ -529,12 +534,16 @@ begin
 
   return jsonb_build_object(
     'published', v_e.status = 'published',
-    'admin_preview', v_admin and v_e.status = 'closed',
+    'admin_preview', v_admin and (v_e.status = 'closed'
+                                  or (v_e.status = 'active' and now() > v_e.ends_at)),
     'status', v_e.status,
     'total_eligible', v_e.eligible_count,
     'total_votes', v_total,
+    -- Capped at 100: a configured eligible_count below the ballots recorded is
+    -- a data-entry error, and a turnout above 100% would misstate the result.
     'turnout', case when v_e.eligible_count > 0
-                    then round((v_total::numeric / v_e.eligible_count) * 100, 1) else 0 end,
+                    then least(round((v_total::numeric / v_e.eligible_count) * 100, 1), 100)
+                    else 0 end,
     'rows', case when v_visible then coalesce(v_rows, '[]'::jsonb) else null end,
     'winner', case when v_e.status = 'published' then v_winner else null end
   );

@@ -95,7 +95,7 @@
         <section class="card">
           <div class="card-head">
             <div><h3>${esc(e.title)}</h3><div class="sub">${esc(e.category)} · ${UI.fmtDate(e.startsAt)} – ${UI.fmtDate(e.endsAt)}</div></div>
-            ${UI.statusBadge(e.status)}
+            ${UI.statusBadge(UI.effectiveStatus(e))}
           </div>
           <div class="card-body">
             <div class="result-stats">
