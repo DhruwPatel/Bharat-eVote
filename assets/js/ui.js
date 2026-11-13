@@ -271,18 +271,30 @@ window.UI = (function () {
         }
       };
 
-      let seenNotes = new Set((notes || []).map((n) => n.id));
+      /* Announce an unread row once per browser, whether it landed while the
+         page was open (approval granted in another tab) or before this visit
+         (the voter signed in after being approved). */
+      const announce = (list) => {
+        const key = "bve.notified." + (user && user.id ? user.id : "anon");
+        let seen = [];
+        try { seen = JSON.parse(localStorage.getItem(key) || "[]"); } catch (_) { seen = []; }
+        const fresh = list.filter((n) => !n.read && !seen.includes(n.id));
+        if (fresh.length) {
+          toast(fresh[0].text, "info");
+          chime();
+        }
+        try {
+          localStorage.setItem(key, JSON.stringify(list.slice(0, 20).map((n) => n.id)));
+        } catch (_) { /* private mode */ }
+      };
+
+      announce(notes || []);
       setInterval(async () => {
         if (document.hidden) return;
         let list;
         try { list = await window.DB.notifications(); } catch (_) { return; }
         paintBell(list);
-        const fresh = list.filter((n) => !n.read && !seenNotes.has(n.id));
-        seenNotes = new Set(list.map((n) => n.id));
-        if (fresh.length) {
-          toast(fresh[0].text, "info");
-          chime();
-        }
+        announce(list);
       }, 20000);
     }
 
@@ -324,28 +336,39 @@ window.UI = (function () {
     setTimeout(() => el.remove(), 3800);
   }
 
-  /* Soft two-tone chime for a new notification. Browsers only allow audio
-     after a user gesture, so this fails silently when it is blocked. */
-  function chime() {
+  /* Soft two-tone chime for a new notification. One shared AudioContext is
+     created and resumed on the first pointer/key event, because browsers keep
+     audio suspended until the user has interacted with the page. */
+  let audioCtx = null;
+  function audio() {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      const ctx = new Ctx();
-      if (ctx.state === "suspended") ctx.resume();
+      if (!Ctx) return null;
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    } catch (_) { return null; }
+  }
+  document.addEventListener("pointerdown", audio, { once: true });
+  document.addEventListener("keydown", audio, { once: true });
+
+  function chime() {
+    const ctx = audio();
+    if (!ctx) return;
+    try {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(880, ctx.currentTime);
       osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.14);
       gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.34);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.36);
-      setTimeout(() => ctx.close(), 700);
-    } catch (_) { /* autoplay blocked — indicator still shows */ }
+    } catch (_) { /* audio blocked — the toast still shows */ }
   }
 
   function modal({ title, desc = "", body = "", confirmText = "Confirm", cancelText = "Cancel", danger = false, wide = false, hideCancel = false, onConfirm }) {
