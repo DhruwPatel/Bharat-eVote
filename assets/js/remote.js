@@ -109,10 +109,17 @@ window.REMOTE_DB = (function () {
       // results review stays locked. Administrators close expired ones here.
       if (profile && profile.role === "admin") {
         try {
+          const nowIso = new Date().toISOString();
           await client().from("elections")
             .update({ status: "closed" })
             .eq("status", "active")
-            .lt("ends_at", new Date().toISOString());
+            .lt("ends_at", nowIso);
+          // A scheduled election only opens if something flips its status; do it
+          // here so a future start time does not leave voters locked out.
+          await client().from("elections")
+            .update({ status: "active" })
+            .eq("status", "upcoming")
+            .lte("starts_at", nowIso);
         } catch (_) { /* non-fatal: the RPC also treats an expired window as closed */ }
       }
       let q = client().from("elections")
@@ -234,12 +241,23 @@ window.REMOTE_DB = (function () {
         return c || 0;
       };
       const elections = await api.elections();
+      // Mirror effectiveStatus so an active election whose window has not opened
+      // is counted as upcoming, and one whose window has passed as completed.
+      const now = Date.now();
+      const stateOf = (e) => {
+        if (e.status !== "active") return e.status;
+        const start = e.startsAt ? new Date(e.startsAt).getTime() : NaN;
+        const end = e.endsAt ? new Date(e.endsAt).getTime() : NaN;
+        if (Number.isFinite(start) && now < start) return "upcoming";
+        if (Number.isFinite(end) && now > end) return "closed";
+        return "active";
+      };
       return {
         registeredVoters: await count("profiles", (q) => q.eq("role", "voter")),
         totalElections: elections.length,
-        activeElections: elections.filter((e) => e.status === "active").length,
-        upcomingElections: elections.filter((e) => e.status === "upcoming").length,
-        completedElections: elections.filter((e) => ["closed", "published"].includes(e.status)).length,
+        activeElections: elections.filter((e) => stateOf(e) === "active").length,
+        upcomingElections: elections.filter((e) => stateOf(e) === "upcoming").length,
+        completedElections: elections.filter((e) => ["closed", "published"].includes(stateOf(e))).length,
         votesCast: elections.reduce((s, e) => s + e.votesCast, 0)
       };
     },
